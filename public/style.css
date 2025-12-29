@@ -482,6 +482,10 @@ footer {
     font-family: "Oswald", sans-serif;
   }
 
+    .auth-container,
+  .login-container {
+    min-width: 350px;
+  }
 
 }
 
