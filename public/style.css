@@ -484,7 +484,7 @@ footer {
 
     .auth-container,
   .login-container {
-    min-width: 350px;
+    /* min-width: 350px; */
   }
 
 }
