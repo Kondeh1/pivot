@@ -1,0 +1,58 @@
+<%- include("partials/dashboardheader.ejs") %>
+<html>
+   <h1 class="welcome">Welcome, <%= username %>.</h1>
+  <div class="box">
+    <h1 class="list-title"><%= listTitle %></h1>
+    <% for(let item of list) {%>
+    <div class="lists">
+        <form action="/delete" method="post">
+            <input  class="fa-jelly-fill fa-regular fa-xmark" style="color: #73c8d2;" type="checkbox" onchange="this.form.submit()" name="deleteItemId" value="<%= item.todo_id %>"> 
+        </form>
+      <h1 ><%= item.task_description %></h1>
+      <form action="/edit" class="edit" method="post">
+        <input type="hidden" name="updatedItemId" value="<%= item.todo_id %>" />
+        <input
+          id="input<%=item.todo_id%>"
+          type="text"
+          name="updatedItemTitle"
+          value="<%= item.task_description %>"
+          autocomplete="off"
+          autofocus="true"
+          hidden="true"
+        />
+        <button id="done<%=item.todo_id%>" class="edit" type="submit" hidden>
+          <img
+            class="icon"
+            src="/images/check_40dp_FF9013_FILL0_wght400_GRAD0_opsz40.svg"
+            alt="tick image"
+          />
+        </button>
+      </form>
+      <button
+        id="edit<%=item.todo_id%>"
+        class="edit"
+        onclick="handler('<%=item.todo_id%>')"
+      >
+        <img
+          src="/images/edit_40dp_FF9013_FILL0_wght400_GRAD0_opsz40.svg"
+          alt="edit button"
+        />
+      </button>
+    </div>
+
+    <% } %>
+    <form class="item" action="/add" method="post">
+        <input type="text" name="newItem" placeholder="New Item" autocomplete="off" autofocus="true" class="adddes"/>
+        <button class="add" type="submit" name="list" value=<%=listTitle %> >+</button>
+    </form>
+
+  </div>
+
+  <script>
+    function handler(id) {
+      document.getElementById("edit" + id).setAttribute("hidden", true);
+      document.getElementById("done" + id).removeAttribute("hidden");
+      document.getElementById("input" + id).removeAttribute("hidden");
+    }
+  </script>
+</html>

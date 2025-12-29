@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="icon" type="image/png" href="/images/Pivot.png" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Rubik+Gemstones&display=swap"
+      rel="stylesheet"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PIVOT</title>
+  </head>
+
+  <body>
+    <nav class="nav-bar">
+      <img class="logo" src="/images/Pivot.png" alt="" />
+      <% if(locals.respond){ %>
+      <h1 class="alert"><%= respond %></h1>
+      <% } %>
+      <ul class="nav-list">
+        <li><a href="#features">Features</a></li>
+        <li id="btn">Get Started</li>
+        <img
+          class="menu"
+          src="/images/menu_27dp_FF9013_FILL0_wght400_GRAD0_opsz24.svg"
+          alt=""
+        />
+        <li class="log">Log In</li>
+      </ul>
+    </nav>
+
+    <nav id="full-menu" class="nav-overlay">
+      <img
+        class="close"
+        src="/images/close_27dp_FF9013_FILL0_wght400_GRAD0_opsz24.svg"
+        alt=""
+      />
+      <ul class="nav-links">
+        <li ><a href="#features">Features</a></li>
+        <li id="btn"><a href="#">Get Started</a></li>
+        <li class="log"><a href="#">Log In</a></li>
+      </ul>
+    </nav>
+  </body>
+</html>
