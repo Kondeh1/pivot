@@ -482,10 +482,7 @@ footer {
     font-family: "Oswald", sans-serif;
   }
 
-  .auth-container,
-  .login-container {
-    min-width: 350px;
-  }
+
 }
 
 @media (max-width: 480px) {
@@ -571,7 +568,6 @@ footer {
 
   .box {
     max-width: 400px;
-      background-color: red;
   }
 
 }
