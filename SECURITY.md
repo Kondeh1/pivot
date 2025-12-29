@@ -9,8 +9,7 @@ We currently provide security updates for the following versions:
 ## Reporting a Vulnerability
 If you find a security vulnerability, please **do not** open a public issue. Instead, follow these steps:
 
-1. **Email us:** Send a detailed report to [Your Support Email].
-2. **Details:** Include a description of the bug and steps to reproduce it.
+1. **Email us:** Send a detailed report to moribasahrkondeh@gmail.com.
 3. **Response:** We aim to acknowledge your report within 48 hours and provide a fix as soon as possible.
 
 We appreciate your help in keeping Pivot secure for everyone!
