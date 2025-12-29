@@ -1,5 +1,3 @@
-To make this as easy as possible, I have combined the entire **README.md** into one clean, copy-pasteable block. This follows the standard Markdown format used for documentation.
-
 ```markdown
 # Pivot – Streamlined Task Management
 
