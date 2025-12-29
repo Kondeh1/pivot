@@ -8,10 +8,10 @@ import { Strategy } from "passport-local";
 import session from "express-session";
 import passport from "passport";
 
+env.config();
 const app = express();
 const port = process.env.PORT || 3000;
-const saltRounds = 20;
-env.config();
+const saltRounds = 10; 
 
 app.use(
   session({
@@ -27,40 +27,42 @@ app.use(passport.session());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
+const isProduction = process.env.DATABASE_URL ? true : false;
+
 const db = new pg.Client({
-  user: "postgres",
-  database: "PIVOT",
-  host: process.env.HOST_NAME,
-  password: process.env.DB_PASSWORD,
-  port: process.env.DB_PORT,
+  connectionString: process.env.DATABASE_URL || {
+    user: "postgres",
+    host: process.env.HOST_NAME,
+    database: "PIVOT",
+    password: process.env.DB_PASSWORD,
+    port: process.env.DB_PORT,
+  },
+  ssl: isProduction ? { rejectUnauthorized: false } : false,
 });
 
 db.connect();
-
-var items = [
-  { id: 1, title: "Buy milk" },
-  { id: 2, title: "Finish homework" },
-  { id: 2, title: "Finish homework" },
-];
 
 app.get("/", (req, res) => {
   res.render("index.ejs");
 });
 
 app.get("/dashboard", async (req, res) => {
-  console.log();
   if (req.isAuthenticated()) {
-    items = await db.query("SELECT * FROM todos WHERE user_id = $1", [
-      req.user.id,
-    ]);
+    try {
+      const items = await db.query("SELECT * FROM todos WHERE user_id = $1", [
+        req.user.id,
+      ]);
 
-    res.render("dashboard.ejs", {
-      list: items.rows,
-      listTitle: "Today",
-      username: req.user.first_name,
-    });
+      res.render("dashboard.ejs", {
+        list: items.rows,
+        listTitle: "Today",
+        username: req.user.first_name,
+      });
+    } catch (err) {
+      console.log(err);
+    }
   } else {
-    res.render("index.ejs");
+    res.redirect("/");
   }
 });
 
@@ -89,16 +91,15 @@ app.post(
 
 app.get("/logout", (req, res) => {
   req.logout((err) => {
-    res.render("index.ejs");
+    res.redirect("/");
   });
 });
 
 app.post("/edit", async (req, res) => {
   const item = req.body.updatedItemTitle;
   const id = req.body.updatedItemId;
-
   try {
-    const update = await db.query(
+    await db.query(
       "UPDATE todos SET task_description = ($1) WHERE todo_id = $2",
       [item, id]
     );
@@ -110,7 +111,6 @@ app.post("/edit", async (req, res) => {
 
 app.post("/add", async (req, res) => {
   const newItem = req.body.newItem;
-
   try {
     await db.query(
       "INSERT INTO todos( user_id , task_description) VALUES($1, $2)",
@@ -124,8 +124,6 @@ app.post("/add", async (req, res) => {
 
 app.post("/delete", async (req, res) => {
   const deleteItemId = req.body.deleteItemId;
-  console.log(deleteItemId);
-
   try {
     await db.query("DELETE FROM todos WHERE todo_id = $1", [deleteItemId]);
     res.redirect("/dashboard");
@@ -137,31 +135,23 @@ app.post("/delete", async (req, res) => {
 app.post("/register", async (req, res) => {
   const { fName, lName, password, email } = req.body;
   try {
-    const result = await db.query("SELECT * FROM users WHERE email = $1", [
-      email,
-    ]);
-
-    console.log(result.rows.length);
+    const result = await db.query("SELECT * FROM users WHERE email = $1", [email]);
 
     if (result.rows.length > 0) {
-      console.log();
       res.render("index.ejs", {
         respond: "A user with that email has already been registered.",
       });
     } else {
       bcrypt.hash(password, saltRounds, async (err, hash) => {
         if (err) {
-          console.log("Error when hashing.", err);
+          console.log(err);
         } else {
           const dataResult = await db.query(
             "INSERT INTO users(first_name, last_name, email, password) VALUES($1, $2, $3, $4) RETURNING *",
             [fName, lName, email, hash]
           );
-
           const user = dataResult.rows[0];
-
           req.login(user, (err) => {
-            console.log("Success");
             res.redirect("/dashboard");
           });
         }
@@ -172,44 +162,24 @@ app.post("/register", async (req, res) => {
   }
 });
 
-// app.post("/login", async (req, res) => {});
-
 passport.use(
   "local",
-  new Strategy({ usernameField: "email" }, async function verify(
-    email,
-    password,
-    cb
-  ) {
+  new Strategy({ usernameField: "email" }, async function verify(email, password, cb) {
     try {
-      const data = await db.query("SELECT * FROM users WHERE email = $1", [
-        email,
-      ]);
-
+      const data = await db.query("SELECT * FROM users WHERE email = $1", [email]);
       if (data.rows.length > 0) {
         const user = data.rows[0];
         const storePassword = user.password;
-        console.log(storePassword);
         bcrypt.compare(password, storePassword, (err, valid) => {
-          if (err) {
-            console.log("Error comparing password:", err);
-            return cb(err);
-          } else {
-            if (valid) {
-              // res.render("dashboard.ejs");
-              console.log("Log in");
-              return cb(null, user);
-            } else {
-              return cb(null, false);
-            }
-          }
+          if (err) return cb(err);
+          if (valid) return cb(null, user);
+          return cb(null, false);
         });
       } else {
-        console.log("User does not exist");
         return cb("User not found.");
       }
     } catch (err) {
-      console.log(err);
+      return cb(err);
     }
   })
 );
@@ -220,55 +190,31 @@ passport.use(
     {
       clientID: process.env.CLIENT_ID,
       clientSecret: process.env.CLIENT_SECRET,
-      callbackURL: "http://localhost:3000/auth/google/PIVOT",
+      callbackURL: process.env.CALLBACK_URL || "http://localhost:3000/auth/google/PIVOT",
       userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo",
     },
     async (accessToken, refreshToken, profile, cb) => {
-      // console.log(profile);
-
       try {
-        const result = await db.query("SELECT * FROM users WHERE email = $1", [
-          profile.email,
-        ]);
-
+        const result = await db.query("SELECT * FROM users WHERE email = $1", [profile.email]);
         if (result.rows.length > 0) {
           return cb(null, result.rows[0]);
         } else {
           const newUser = await db.query(
-            "INSERT INTO users(first_name, last_name, email, password) VALUES($1, $2, $3, $4)",
+            "INSERT INTO users(first_name, last_name, email, password) VALUES($1, $2, $3, $4) RETURNING *",
             [profile.given_name, profile.family_name, profile.email, "google"]
           );
           return cb(null, newUser.rows[0]);
         }
       } catch (err) {
-        console.log(err);
         return cb(err);
       }
     }
   )
 );
 
-passport.serializeUser((user, cb) => {
-  cb(null, user);
-});
-
-passport.deserializeUser((user, cb) => {
-  cb(null, user);
-});
+passport.serializeUser((user, cb) => cb(null, user));
+passport.deserializeUser((user, cb) => cb(null, user));
 
 app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
+  console.log(`Server running on port ${port}`);
 });
-
-// passport.use(
-//   "local",
-//   new Strategy(async function verify(username, password, cb) {
-//     const results = await db.query("SELECT * FROM users WHERE email = $1", [
-//       username,
-//     ]);
-
-//     const result = results.rows.length;
-//     console.log(result);
-//     console.log(results);
-//   })
-// );
